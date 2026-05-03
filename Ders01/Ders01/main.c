@@ -7,14 +7,31 @@
 
 #include <avr/io.h>
 
+#ifndef F_CPU
+#define F_CPU 16000000
+#endif
+
+#include <util/delay.h>
 
 int main(void)
 {
-    DDRB = 0b11111111;
-	PORTB = 0b00100000;
+	// arduino uno r3 built-in led on/off
+    DDRB = 0b11111111; 
+	
 	
     while (1) 
     {
+		/*
+		PORTB = 0b00100000;
+		_delay_ms(1000);
+		PORTB = 0b00000000;
+		_delay_ms(1000);
+		*/
+		
+		PORTB = 0x20;
+		_delay_ms(1000);
+		PORTB = 0x00;
+		_delay_ms(1000);
     }
 }
 
