@@ -32,7 +32,7 @@ int main(){
 		**portd = ON;
 		_delay_ms(800);
 		**portd = OFF;
-		_delay_ms(800);
+		_delay_ms(800); // same
 	}
 }
 
