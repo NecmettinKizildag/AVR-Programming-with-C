@@ -64,7 +64,7 @@ int main(void)
 		
 		for (num = 0; num < 4; num++) // same effect with above
 		{
-			PORTD ^= (1 << num);
+			PORTD ^= (1 << num); // ^ sets the pin on if it is off, off if it is on
 			_delay_ms(500);
 		}
 	
