@@ -106,8 +106,8 @@ typedef struct{
 }pcmsk_t,*pcmsk_ptr_t;
 #define REG_PCMSK					((pcmsk_ptr_t)REG_ADDR_PCMSK0)
 
-ISR(PCINT0_vect){ // works , if our pin change interrupt has signal
-	PORTD = 0x00;
+ISR(PCINT0_vect){ // works , if our pin has any change 
+	PORTD ^= 0xff;
 }
 
 int main(void)
