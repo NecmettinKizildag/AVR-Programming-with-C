@@ -10,7 +10,7 @@
 // 0x45		FOC0A FOC0B – – WGM02 CS02 CS01 CS00				TCCR0B
 
 #define REG_ADDR_TCCR0					0x44 // tccr0a and tccr0b are sequential, so we use them together like 16 bit register
-#define _REG_TCCR0						(*(uint16_t*)REG_ADDR_TCCR0) // if we use uint8_t there will be a overflow
+#define _REG_TCCR0						(*(volatile uint16_t*)REG_ADDR_TCCR0) // if we use uint8_t there will be a overflow
 
 typedef struct{
 	uint8_t wgmA : 2;
@@ -47,6 +47,38 @@ typedef union{
 #define TIMER0_EXTERNAL_CLOCK_FALLING	6
 #define TIMER0_EXTERNAL_CLOCK_RISING	7 // look at data sheet for "Clock Select Bit Description"
 
+
+// (0x46) TCNT0[7:0]					TCNT0
+// (0x35) – – – – – OCF0B OCF0A TOV0	TIFR0
+
+#define REG_ADDR_TCNT0					0x46
+#define _REG_TCNT0						(*(volatile uint16_t*)REG_ADDR_TCNT0)
+
+#define REG_ADDR_TIFR0					0x35
+#define _REG_TIFR0						(*(volatile uint16_t*)REG_ADDR_TIFR0)
+
+typedef struct{
+	uint8_t value : 8;
+	}tcnt0_t, *tcnt0_ptr_t;
+
+#define REG_TIMER0_COUNTER				((tcnt0_ptr_t)REG_ADDR_TCNT0)
+#define TIMER0_COUNTER					REG_TIMER0_COUNTER.value
+
+typedef struct{
+	uint8_t toc0 : 1;
+	uint8_t ocf0a : 1;
+	uint8_t ocf0b : 1;
+	uint8_t reserved : 5;
+	}tifr0_t, *tifr0_ptr_t;
+
+#define REG_TIFR0						((tifr0_ptr_t)REG_ADDR_TIFR0)
+#define TIMER0_OVERFLOW					REG_TIFR0.tov0
+
+// timer0_counter -> 0...1...2.........255 -> timer0_overflow ...1
+// ISR -> timer0_overflow ...0
+// timer0_overflow ...1
+// uint8_t overflow = 0;
+// after every overflow -> overflow++
 
 int main(void)
 {
