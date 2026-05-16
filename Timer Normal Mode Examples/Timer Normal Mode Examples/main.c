@@ -1,12 +1,13 @@
 /*
- * Timer TCCR0A and TCCR0B.c
+ * Timer Normal Mode Examples.c
  *
- * Created: 5/12/2026 3:22:48 PM
+ * Created: 5/16/2026 4:18:11 PM
  * Author : nec
  */ 
 
-#include <stdint.h>
+//
 #include "328p_gpio.h"
+#define USE_GPIO_D
 
 // 0x44		COM0A1 COM0A0 COM0B1 COM0B0 – – WGM01 WGM00			TCCR0A
 // 0x45		FOC0A FOC0B – – WGM02 CS02 CS01 CS00				TCCR0B
@@ -63,17 +64,17 @@ typedef struct{
 	uint8_t value : 8;
 	}tcnt0_t, *tcnt0_ptr_t;
 
-#define REG_TIMER0_COUNTER				((tcnt0_ptr_t)REG_ADDR_TCNT0)
+#define REG_TIMER0_COUNTER				(*(tcnt0_ptr_t)REG_ADDR_TCNT0)
 #define TIMER0_COUNTER					REG_TIMER0_COUNTER.value
 
 typedef struct{
-	uint8_t toc0 : 1;
+	uint8_t tov0 : 1;
 	uint8_t ocf0a : 1;
 	uint8_t ocf0b : 1;
 	uint8_t reserved : 5;
 	}tifr0_t, *tifr0_ptr_t;
 
-#define REG_TIFR0						((tifr0_ptr_t)REG_ADDR_TIFR0)
+#define REG_TIFR0						(*(tifr0_ptr_t)REG_ADDR_TIFR0)
 #define TIMER0_OVERFLOW					REG_TIFR0.tov0
 
 // timer0_counter -> 0...1...2.........255 -> timer0_overflow ...1
@@ -82,24 +83,38 @@ typedef struct{
 // uint8_t overflow = 0;
 // after every overflow -> overflow++
 
+uint16_t overflow;
+uint8_t LED_NO;
+
 int main(void)
 {
-    /* Replace with your application code */
+    DDRD_UNION.port = PORT_ALL_OUTPUT;
+	
+	TIMER0_MODE_SELECTION = TIMER0_MODE_NORMAL;
+	//TIMER0_CLOCK_SELECTION = TIMER0_NO_PRESCALING;
+	TIMER0_CLOCK_SELECTION = TIMER0_PRESCALING_64;
+	TIMER0_COUNTER = 0;
+	
+	overflow = 0;
+	LED_NO = 0;
+	
     while (1) 
     {
-		_REG_TCCR0 = 0xFFFF;
+		if(TIMER0_COUNTER >= 249)
+		{
+			overflow++;
+			TIMER0_COUNTER = 0;
+			
+			if (overflow >= 50) //(without pre scaling) 8000 overflow for 125 ms, resolution is 1/Clock hz ->  (required delay/resolution) - 1 = 249 --- 3200 overflow for 50 ms ----- 3200 for 30 ms but counter is 149 --- 3200 overflow for 500 ms 
+								//(with prescaling at 256) 125 overflow for 500 ms -- (with prescaling at 64) 50 overflow for 50 ms  but counter is 249
+			{
+				overflow = 0;
+				PORTD_UNION.port = (1 << LED_NO);
+				LED_NO++;
+			}
+			LED_NO = (LED_NO > 7) ? 0 : LED_NO;
+		}
 		
-		//REG_TCCR0 -> wgmA = 3;
-		//REG_TCCR0 -> clock_select = 5;
-		
-		REG_TCCR0.bits.wgmA = 3;
-		REG_TCCR0.bits.clock_select = 5;
-		
-		REG_TCCR0.value = 0xFFFF;
-		
-		TIMER0_MODE_SELECTION = TIMER0_MODE_NORMAL;
-		
-		TIMER0_CLOCK_SELECTION = TIMER0_NO_PRESCALING;
     }
 }
 
